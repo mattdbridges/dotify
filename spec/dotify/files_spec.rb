@@ -6,8 +6,8 @@ require 'fileutils'
 describe Dotify::Files do
 
   describe "methods" do
-    it "should respond to dots" do
-      Dotify::Files.should respond_to :dots
+    it "should respond to linked" do
+      Dotify::Files.should respond_to :linked
     end
     it "should respond to installed" do
       Dotify::Files.should respond_to :installed
@@ -24,27 +24,28 @@ describe Dotify::Files do
 
   describe Dotify::Files, "#dotfile" do
     it "should return the path to the file when it is linked in the root" do
-      Dotify::Files.dotfile(".vimrc").should == File.join(Dotify::Config.home, ".vimrc")
-      Dotify::Files.dotfile("/spec/home/.bashrc").should == File.join(Dotify::Config.home, ".bashrc")
+      Dotify::Config.stub(:home).and_return '/home'
+      Dotify::Files.dotfile(".vimrc").should == '/home/.vimrc'
+      Dotify::Files.dotfile("/spec/home/.bashrc").should == '/home/.bashrc'
     end
   end
 
   describe Dotify::Files, "#dotify" do
     it "should return the path to the file when it is linked in the root" do
-      Dotify::Files.dotify(".vimrc").should == File.join(Dotify::Config.path, ".vimrc")
-      Dotify::Files.dotify("/spec/home/.bashrc").should == File.join(Dotify::Config.path, ".bashrc")
+      Dotify::Config.stub(:path).and_return '/tmp'
+      Dotify::Files.dotify(".vimrc").should == '/tmp/.vimrc'
+      Dotify::Files.dotify("/spec/home/.bashrc").should == '/tmp/.bashrc'
     end
   end
 
-  describe Dotify::Files, "#dots" do
+  describe Dotify::Files, "#linked" do
     before do
       Dotify::FileList.stub(:dotify) do
         ['/spec/test/.bash_profile', '/spec/test/.bashrc', '/spec/test/.zshrc']
       end
     end
-    let!(:files) { Dotify::Files.dots }
+    let!(:files) { Dotify::Files.linked }
     it "should return the list of dotfiles in the dotify path" do
-      files
       files.map! { |f| Dotify::Files.filename(f) }
       files.should include '.bash_profile'
       files.should include '.bashrc'
@@ -52,13 +53,13 @@ describe Dotify::Files do
     end
     it "shoud yield the files if a block is given" do
       yields = files.map { |f| [f, Dotify::Files.filename(f)] }
-      expect { |b| Dotify::Files.dots(&b) }.to yield_successive_args(*yields)
+      expect { |b| Dotify::Files.linked(&b) }.to yield_successive_args(*yields)
     end
   end
 
   describe Dotify::Files, "#unlinked" do
     before do
-      Dotify::Files.stub(:dots) do
+      Dotify::Files.stub(:linked) do
         ['/spec/test/.vimrc', '/spec/test/.bashrc', '/spec/test/.zshrc']
       end
       Dotify::Files.stub(:installed) do
@@ -78,7 +79,7 @@ describe Dotify::Files do
 
   describe Dotify::Files, "#installed" do
     before do
-      Dotify::Files.stub(:dots) do
+      Dotify::Files.stub(:linked) do
         %w[/spec/test/.zshrc /spec/test/.bashrc /spec/test/.vimrc /spec/test/.dotify]
       end
       Dotify::FileList.stub(:home) do
@@ -100,7 +101,7 @@ describe Dotify::Files do
 
   describe Dotify::Files, "#uninstalled" do
     before do
-      Dotify::Files.stub(:dots) do
+      Dotify::Files.stub(:linked) do
         %w[/spec/test/.zshrc /spec/test/.bashrc /spec/test/.vimrc /spec/test/.dotify]
       end
       Dotify::FileList.stub(:home) do

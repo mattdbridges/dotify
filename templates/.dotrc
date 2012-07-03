@@ -1,3 +1,9 @@
+# Set the editor to use when editing Dotify dotfiles.
+#   Default: 'vim'
+#   Options: 'vi', 'vim', 'emacs', '[ANY OTHER TERMINAL BASED EDITOR]'
+#
+# editor: 'vi'
+#
 # Ignoring files in ~/.dotify when linking:
 #
 # ignore:
@@ -5,10 +11,7 @@
 #   - '.git'
 #   - '.gitignore'
 #   - '.gitmodules'
-#
-# Ignoring files in the home directory when linking:
-#
-# ignore:
+#   # Ignoring files in the home directory when linking:
 #   dotify:
 #   - '.rbenv'
 #   - '.rvm'

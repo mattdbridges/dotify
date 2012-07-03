@@ -5,7 +5,6 @@
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 $:.unshift File.expand_path("../../lib", __FILE__)
-require 'fileutils'
 Dir["./spec/support/**/*.rb"].each { |f| require f }
 
 RSpec.configure do |config|

@@ -26,7 +26,7 @@ describe Dotify::Config do
       Dotify::Config.path.should == File.join(Dotify::Config.home, '.dotify')
     end
     it "should set a default editor" do
-      Dotify::Config.editor.should == 'vi'
+      Dotify::Config.editor.should == Dotify::Config::EDITOR
     end
     it "should allow a custom editor" do
       Dotify::Config.stub(:config)  do
@@ -35,11 +35,27 @@ describe Dotify::Config do
       Dotify::Config.editor.should == 'subl'
     end
   end
+
+  describe Dotify::Config, "#file" do
+    it "should return the right page" do
+      Dotify::Config.stub(:home).and_return('/tmp')
+      Dotify::Config.file.should == '/tmp/.dotrc'
+    end
+  end
+
   describe "ignore files" do
     before do
       Dotify::Config.stub(:config)  do
         { :ignore => { :dotfiles => %w[.gemrc], :dotify => %w[.gitmodule] } }
       end
+    end
+    it "should have a default set of dotfiles" do
+      Dotify::Config.stub(:config).and_return({})
+      Dotify::Config.ignore(:dotify).should include '.git'
+      Dotify::Config.ignore(:dotify).should include '.gitmodule'
+      Dotify::Config.ignore(:dotfiles).should include '.dropbox'
+      Dotify::Config.ignore(:dotfiles).should include '.Trash'
+      Dotify::Config.ignore(:dotfiles).should include '.dotify'
     end
     it "should retrieve the list of dotfiles to ignore in the home directory" do
       Dotify::Config.ignore(:dotfiles).should include '.gemrc'

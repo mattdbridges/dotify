@@ -10,33 +10,33 @@ module Dotify
       include Thor::Shell
       include Thor::Actions
 
-      def dots
-        @dots ||= FileList.dotify
-        return @dots unless block_given?
-        @dots.each {|d| yield(d, filename(d)) }
+      def linked
+        @linked ||= FileList.dotify
+        return @linked unless block_given?
+        @linked.each {|d| yield(d, filename(d)) }
       end
 
       def unlinked
-        dots = self.dots.map { |d| filename(d) }
+        linked = self.linked.map { |d| filename(d) }
         installed = self.installed.map {|i| filename(i)}
-        unlinked = (dots - installed).map{|f| dotfile(f) }
+        unlinked = (linked - installed).map{|f| dotfile(f) }
         return unlinked unless block_given?
         unlinked.each {|u| yield(u, filename(u)) }
       end
 
       def installed
-        dots = self.dots.map { |f| filename(f) }
+        linked = self.linked.map { |f| filename(f) }
         installed = FileList.home.select do |d|
-          dots.include?(filename(d))
+          linked.include?(filename(d))
         end
         return installed unless block_given?
         installed.each {|i| yield(i, filename(i)) }
       end
 
       def uninstalled
-        dots = self.dots.map { |f| filename(f) }
+        linked = self.linked.map { |f| filename(f) }
         installed = FileList.home.select do |d|
-          !dots.include?(filename(d))
+          !linked.include?(filename(d))
         end
         return installed unless block_given?
         installed.each {|i| yield(i, filename(i)) }

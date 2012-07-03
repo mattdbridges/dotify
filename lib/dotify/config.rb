@@ -5,13 +5,18 @@ require 'yaml'
 module Dotify
   class Config
 
-    DOTIFY_DIRNAME = '.dotify'
-    DOTIFY_CONFIG = '.dotrc'
+    DIRNAME = '.dotify'
+    CONFIG_FILE = '.dotrc'
+    EDITOR = 'vim'
+    DEFAULT_IGNORE = {
+      :dotify => %w[.git .gitmodule],
+      :dotfiles => %w[.DS_Store .Trash .dropbox .dotify]
+    }
 
     class << self
 
       def dirname
-        @dirname ||= DOTIFY_DIRNAME
+        @dirname ||= DIRNAME
       end
 
       def installed?
@@ -23,16 +28,16 @@ module Dotify
       end
 
       def editor
-        config.fetch(:editor, 'vi')
+        config.fetch(:editor, 'vim')
       end
 
       def load_config!
-        config = File.exists?(config_file) ? (YAML.load_file(config_file) || {}) : {}
+        config = File.exists?(file) ? (YAML.load_file(file) || {}) : {}
         symbolize_keys!(config)
       end
 
       def ignore(what)
-        config.fetch(:ignore, {}).fetch(what, [])
+        (config.fetch(:ignore, {}).fetch(what, []) + DEFAULT_IGNORE.fetch(what, [])).uniq
       end
 
       def config
@@ -43,11 +48,11 @@ module Dotify
         Thor::Util.user_home
       end
 
-      private
+      def file
+        File.join(home, CONFIG_FILE)
+      end
 
-        def config_file
-          File.join(home, DOTIFY_CONFIG)
-        end
+      private
 
         def symbolize_keys!(opts)
           sym_opts = {}
