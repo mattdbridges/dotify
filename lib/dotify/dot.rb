@@ -1,3 +1,4 @@
+require 'fileutils'
 require 'dotify/errors'
 
 module Dotify
@@ -17,6 +18,12 @@ module Dotify
       return true
     end
 
+    def backup_and_link
+      FileUtils.rm_rf("#{self.dotfile}.bak", :verbose => false)
+      FileUtils.mv(self.dotfile, "#{self.dotfile}.bak", :verbose => false)
+      FileUtils.ln_sf(self.dotify, self.dotfile, :verbose => false)
+    end
+
     # Unlink the file from Dotify and replace it into the home directory.
     def unlink
       return false unless linked?
@@ -28,7 +35,7 @@ module Dotify
 
   end
 
-  class Unit
+  class Dot
 
     include Actions
 
@@ -64,7 +71,7 @@ module Dotify
     end
 
     def inspect
-      "#<Dotify::Unit filename: '#{@filename}' linked: #{linked?}>"
+      "#<Dotify::Dot filename: '#{@filename}' linked: #{linked?}>"
     end
 
     def linked_to_dotify?

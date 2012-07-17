@@ -8,7 +8,7 @@ module Dotify
   autoload :Config,     'dotify/config'
   autoload :Collection, 'dotify/collection'
   autoload :Filter,     'dotify/filter'
-  autoload :Unit,       'dotify/unit'
+  autoload :Dot,        'dotify/dot'
   autoload :CLI,        'dotify/cli'
 
   def self.installed?

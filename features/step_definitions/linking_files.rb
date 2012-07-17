@@ -9,7 +9,7 @@ Given /^(.*) does not exist in (home|dotify)$/i do |file, location|
 end
 
 When /^they get linked by Dotify$/ do
-  @files_to_link.each { |file| Dotify::Unit.new(file).link }
+  @files_to_link.each { |file| Dotify::Dot.new(file).link }
 end
 
 Then /^they are all linked to the dotify path$/i do

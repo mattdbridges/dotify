@@ -4,17 +4,17 @@ module Dotify
   describe Filter do
 
     describe Filter, "#home" do
-      it "should call Filter#units with the correct path" do
-        Filter.should_receive(:units).with("/tmp/home/.*").once.and_return([])
+      it "should call Filter#dots with the correct path" do
+        Filter.should_receive(:dots).with("/tmp/home/.*").once.and_return([])
         Filter.home
       end
       it "should drop files that have been specified to be ignored" do
-        Filter.stub(:units) do
+        Filter.stub(:dots) do
           [
-            Unit.new('.zshrc'),
-            Unit.new('.bashrc'),
-            Unit.new('.vimrc'),
-            Unit.new('.gitconfig')
+            Dot.new('.zshrc'),
+            Dot.new('.bashrc'),
+            Dot.new('.vimrc'),
+            Dot.new('.gitconfig')
           ]
         end
         Config.stub(:ignore).with(:dotfiles).and_return %w[.zshrc .vimrc]
@@ -27,18 +27,18 @@ module Dotify
     end
 
     describe Filter, "#dotify" do
-      it "should call Filter#units with the correct path" do
-        Filter.should_receive(:units).with("/tmp/home/.dotify/.*").once.and_return([])
+      it "should call Filter#dots with the correct path" do
+        Filter.should_receive(:dots).with("/tmp/home/.dotify/.*").once.and_return([])
         Filter.dotify
       end
       it "should drop files that have been specified to be ignored" do
-        Filter.stub(:units) do
+        Filter.stub(:dots) do
           [
-            Unit.new(".gitconfig"),
-            Unit.new('.vimrc'),
-            Unit.new('.zshrc'),
-            Unit.new('.bashrc'),
-            Unit.new('.fakefile')
+            Dot.new(".gitconfig"),
+            Dot.new('.vimrc'),
+            Dot.new('.zshrc'),
+            Dot.new('.bashrc'),
+            Dot.new('.fakefile')
           ]
         end
         Config.stub(:ignore).with(:dotify).and_return %w[.gitconfig .bashrc]
@@ -51,17 +51,17 @@ module Dotify
       end
     end
 
-    describe Filter, "#units" do
+    describe Filter, "#dots" do
       let(:glob) { '/spec/test/.*' }
       it "should pull the glob of dotfiles from a directory" do
         Dir.should_receive(:[]).with(glob).and_return(%w[. .. /spec/test/.vimrc /spec/test/.bashrc /spec/test/.zshrc])
-        Filter.units(glob)
+        Filter.dots(glob)
       end
       describe "return values" do
         before do
           Dir.stub(:[]).with(glob).and_return(%w[. .. /spec/test/.vimrc /spec/test/.bashrc /spec/test/.zshrc])
         end
-        let(:files) { Filter.units(glob) }
+        let(:files) { Filter.dots(glob) }
         it "should return the right directories" do
           f = files.map(&:filename)
           f.should include '.vimrc'
@@ -78,9 +78,9 @@ module Dotify
 
     describe Filter, "#filenames" do
       let(:files) { [
-        Unit.new('.vimrc'), Unit.new('.bashrc'), Unit.new('.zshrc')
+        Dot.new('.vimrc'), Dot.new('.bashrc'), Dot.new('.zshrc')
       ] }
-      it "return only the filenames of the units" do
+      it "return only the filenames of the dots" do
         result = Filter.filenames(files)
         result.should include '.vimrc'
         result.should include '.bashrc'

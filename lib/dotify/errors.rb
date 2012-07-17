@@ -1,4 +1,4 @@
 module Dotify
   class NonValidShell < StandardError; end
-  class UnitDoesNotExist < StandardError; end
+  class DotDoesNotExist < StandardError; end
 end

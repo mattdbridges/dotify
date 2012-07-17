@@ -7,25 +7,25 @@ module Dotify
     let!(:cli) { CLI.new }
     before do
       Dotify.stub(:installed?).and_return true
-      vimrc = Unit.new('.zshrc')
+      vimrc = Dot.new('.zshrc')
       vimrc.stub(:linked?).and_return(true)
-      bash_profile = Unit.new('.bash_profile')
+      bash_profile = Dot.new('.bash_profile')
       bash_profile.stub(:linked?).and_return(true)
-      gitconfig = Unit.new('.gitconfig')
+      gitconfig = Dot.new('.gitconfig')
       gitconfig.stub(:linked?).and_return(false)
-      zshrc = Unit.new('.zshrc')
+      zshrc = Dot.new('.zshrc')
       zshrc.stub(:linked?).and_return(false)
       Filter.stub(:home).and_return([vimrc, bash_profile, gitconfig, zshrc])
     end
 
     describe CLI, "#edit" do
-      let(:unit) { double('unit', :linked? => true, :dotify => '/tmp/dotify/.vimrc') }
+      let(:dot) { double('dot', :linked? => true, :dotify => '/tmp/dotify/.vimrc') }
       before do
-        Unit.stub(:new).and_return(unit)
+        Dot.stub(:new).and_return(dot)
         cli.stub(:exec)
       end
       it "should open the editor with the passed file" do
-        cli.should_receive(:exec).with([Config.editor, unit.dotify].join(" "))
+        cli.should_receive(:exec).with([Config.editor, dot.dotify].join(" "))
         cli.edit('.vimrc')
       end
       it "should  the editor with the passed file" do
@@ -34,8 +34,8 @@ module Dotify
         cli.edit '.vimrc'
       end
       it "should not edit the file if it has not been linked" do
-        unit.stub(:linked?).and_return false
-        cli.should_receive(:say).with("'#{unit}' has not been linked by Dotify. Please run `dotify link #{unit}` to edit this file.", :blue)
+        dot.stub(:linked?).and_return false
+        cli.should_receive(:say).with("'#{dot}' has not been linked by Dotify. Please run `dotify link #{dot}` to edit this file.", :blue)
         cli.edit('.vimrc')
       end
     end
@@ -59,7 +59,7 @@ module Dotify
         cli.link
       end
       it "attempt to link one single file" do
-        cli.should_receive(:file_action).with(:link, an_instance_of(Unit), {})
+        cli.should_receive(:file_action).with(:link, an_instance_of(Dot), {})
         cli.link('.vimrc')
       end
       it "should output a warning if Dotify is not installed" do
@@ -82,7 +82,7 @@ module Dotify
         cli.unlink
       end
       it "attempt to link one single file" do
-        cli.should_receive(:file_action).with(:unlink, an_instance_of(Unit), {})
+        cli.should_receive(:file_action).with(:unlink, an_instance_of(Dot), {})
         cli.unlink('.vimrc')
       end
       it "should output a warning if Dotify is not installed" do

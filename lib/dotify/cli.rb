@@ -64,11 +64,30 @@ module Dotify
       end
     end
 
+    desc :github, "Pull the dotfiles from a specified github repo into your Dotify directory."
+    method_option :debug, :aliases => '-d', :type => :boolean, :default => false, :desc => "Show error messages if there is a Git failure."
+    def github(repo)
+      return say "Dotify has already been setup.", :blue if Dotify.installed?
+      git_repo_name = "git@github.com:#{repo}.git"
+      say "Pulling #{repo} from Github into #{Config.path}...", :blue
+      Git.clone(git_repo_name, Config.path)
+      say "Backing up dotfile and installing Dotify files...", :blue
+      Collection.new(:dotify).each { |file| file.backup_and_link }
+      if File.exists? File.join(Config.path, ".gitmodules")
+        say "Initializing and updating submodules in Dotify now...", :blue
+        system "cd #{Config.path} && git submodule init &> /dev/null && git submodule update &> /dev/null"
+      end
+      say "Successfully installed #{repo} from Dotify!", :blue
+    rescue Git::GitExecuteError => e
+      say "[ERROR]: There was an problem pulling from #{git_repo_name}.\nPlease make sure that the specified repo exists and you have access to it.", :red
+      say "Git Error: #{e.message}", :red if options[:debug]
+    end
+
     desc :list, "List the installed dotfiles"
     def list
       say "Dotify is managing #{Dotify.collection.linked.count} files:\n", :blue
-      Dotify.collection.linked.each do |unit|
-        say "   * #{unit.filename}", :yellow
+      Dotify.collection.linked.each do |dot|
+        say "   * #{dot.filename}", :yellow
       end
       $stdout.write "\n"
     end
@@ -76,7 +95,7 @@ module Dotify
     desc 'edit [FILE]', "Edit a dotify file"
     method_option :save, :aliases => '-s', :default => false, :type => :boolean, :require => true, :desc => "Save Dotify files and push to Github"
     def edit(file)
-      file = Unit.new(file)
+      file = Dot.new(file)
       if file.linked?
         exec "#{Config.editor} #{file.dotify}"
         save if options[:save] == true
@@ -149,7 +168,7 @@ module Dotify
     def link(file = nil)
       return not_setup_warning unless Dotify.installed?
       # Link a single file
-      return file_action :link, Unit.new(file), options unless file.nil?
+      return file_action :link, Dot.new(file), options unless file.nil?
       # Relink the files
       return Dotify.collection.linked.each { |file| file_action(:link, file, options) } if options[:relink]
       # Link the files
@@ -167,7 +186,7 @@ module Dotify
     def unlink(file = nil)
       return not_setup_warning unless Dotify.installed?
       # Unlink a single file
-      return file_action :unlink, Unit.new(file), options unless file.nil?
+      return file_action :unlink, Dot.new(file), options unless file.nil?
       # Unlink the files
       Dotify.collection.linked.each { |file| file_action(:unlink, file, options) }
     end

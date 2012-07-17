@@ -10,13 +10,17 @@ module Dotify
         Config.stub(:file).and_return Config.home(".fake-dotrc")
         expect { Config.retrieve }.not_to raise_error TypeError
       end
-      context "unit tests" do
+      context "dot tests" do
         before do
           Config.instance_variable_set("@hash", nil)
           File.stub(:exists?).with(Config.file).and_return true
         end
         it "should return an empty hash" do
           YAML.stub(:load_file).with(Config.file).and_return({})
+          Config.retrieve.should == {}
+        end
+        it "should catch the TypeError and return an empty hash" do
+          YAML.stub(:load_file).with(Config.file).and_raise(TypeError)
           Config.retrieve.should == {}
         end
         it "should return an the hash returned by YAML#load_file" do
