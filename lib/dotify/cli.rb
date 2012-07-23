@@ -15,8 +15,6 @@ module Dotify
 
     map %w[-v --version] => :version
     map "-s" => :setup
-    map "-a" => :add
-    map "-r" => :remove
     map "-l" => :link
     map "-u" => :unlink
 
