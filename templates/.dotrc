@@ -12,6 +12,6 @@
 #   - '.gitignore'
 #   - '.gitmodules'
 #   # Ignoring files in the home directory when linking:
-#   dotify:
+#   dotfiles:
 #   - '.rbenv'
 #   - '.rvm'
