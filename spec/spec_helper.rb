@@ -5,21 +5,30 @@
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 $:.unshift File.expand_path("../../lib", __FILE__)
-require 'thor/util'
-require 'simplecov'
-SimpleCov.start do
-  add_filter '/spec/support'
+
+def jruby?
+  defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby'
 end
 
-RSpec.configure do |config|
-  config.treat_symbols_as_metadata_keys_with_true_values = true
-  config.run_all_when_everything_filtered = true
-  config.filter_run :focus
+def macruby?
+  defined?(RUBY_ENGINE) && RUBY_ENGINE == 'macruby'
+end
 
-  config.before(:each) do
-    Thor::Util.stub(:user_home) { '/tmp/home' }
-  end
+unless ENV["CI"] || macruby?
+  require 'simplecov'
+  SimpleCov.start 'test_frameworks'
 end
 
 require 'dotify'
+require 'ostruct'
 Dir["./spec/support/**/*.rb"].each { |f| require f }
+
+RSpec.configure do |c|
+  c.treat_symbols_as_metadata_keys_with_true_values = true
+  c.run_all_when_everything_filtered = true
+  c.filter_run :focus
+
+  c.before(:each) do
+    Thor::Util.stub(:user_home) { '/tmp/home' }
+  end
+end

@@ -1,15 +1,8 @@
 require 'spec_helper'
 require 'dotify/dot'
 
-class DummyDot
-  def dotfile
-    '.dummy'
-  end
-  def dotify
-    '.dotify/.dummy'
-  end
-
-  def linked?; end
+class DummyDot < Dotify::Dot
+  def linked?; false; end
   def in_home_dir?; true; end
   def in_dotify?; true; end
 end
@@ -17,24 +10,23 @@ end
 module Dotify
 
   describe Actions do
-    let!(:dummy) { DummyDot.new }
+    let!(:dummy) { DummyDot.new(".dummy") }
     subject { dummy }
     before { dummy.extend(Actions) }
     it { should respond_to :link }
     it { should respond_to :unlink }
 
     describe Actions, "#link" do
-      before do
-        subject.stub(:linked?) { false }
-      end
       it "should not do anything if the file is linked" do
-        subject.stub(:linked?) { true }
-        subject.link.should == false
+        s = subject.dup
+        def s.linked?; true; end
+        s.link.should == false
       end
       it "should not do anything if the is not in the home directory" do
-        subject.stub(:linked?) { true }
-        subject.stub(:in_home_dir?) { false }
-        subject.link.should == false
+        s = subject.dup
+        def s.linked?; true; end
+        def s.in_home_dir?; false; end
+        s.link.should == false
       end
       it "should copy the file from the home directory if it is not in Dotify" do
         FileUtils.should_receive(:rm_rf).with(subject.dotfile, :verbose => false)
@@ -67,7 +59,6 @@ module Dotify
     end
     describe Actions, "#unlink" do
       it "should not do anything if the file is not linked" do
-        subject.stub(:linked?) { false }
         FileUtils.should_not_receive(:rm_rf)
         FileUtils.should_not_receive(:cp_r)
         FileUtils.should_not_receive(:rm_rf)
@@ -94,40 +85,31 @@ module Dotify
       it { should respond_to :linked? }
       it { should respond_to :linked }
 
-      it "should set the attributes properly" do
-        dot.filename.should == '.vimrc'
-        dot.dotify.should == '/tmp/home/.dotify/.vimrc'
-        dot.dotfile.should == '/tmp/home/.vimrc'
-      end
-      it "should puts the filename" do
-        dot.to_s.should == dot.filename
-      end
+      its(:filename) { should == '.vimrc' }
+      its(:dotify) { should == '/tmp/home/.dotify/.vimrc' }
+      its(:dotfile) { should == '/tmp/home/.vimrc' }
+      its(:to_s) { should == dot.filename }
     end
 
     describe "existence in directories" do
-      let(:dot) { Dot.new(".bashrc") }
-      it "should check for the existence in the home directory" do
-        File.stub(:exists?).with(dot.dotfile).and_return true
-        dot.in_home_dir?.should == true
+      subject { dot }
+      context "when dotfile exists" do
+        let(:dot) { LinkedDot.new(".bashrc") }
+        its(:in_home_dir?) { should == true }
+        its(:in_dotify?) { should == true }
       end
-      it "should return false if the file is not in the home directory" do
-        File.stub(:exists?).with(dot.dotfile).and_return false
-        dot.in_home_dir?.should_not == true
-      end
-      it "should check for the existence of the file in Dotify" do
-        File.stub(:exists?).with(dot.dotify).and_return true
-        dot.in_dotify?.should == true
-      end
-      it "should return false if the file is not in Dotify" do
-        File.stub(:exists?).with(dot.dotify).and_return false
-        dot.in_dotify?.should == false
+      context "when dotfile does not exist" do
+        let(:dot) { UnlinkedDot.new(".bashrc") }
+        its(:in_home_dir?) { should_not == true }
+        its(:in_dotify?) { should_not == true }
       end
     end
 
     describe Dot, "#linked_to_dotify?" do
       let(:dot) { Dot.new(".bashrc") }
       it "should return false when an error is raised" do
-        dot.stub(:symlink).and_return NoSymlink
+        File.stub(:symlink?).with(dot.dotfile).and_return false
+        dot.stub(:symlink).and_return false
         dot.linked_to_dotify?.should be_false
       end
       it "should return true if the dotfile is linked to the Dotify file" do
@@ -141,10 +123,7 @@ module Dotify
     end
 
     describe Dot, "#linked?" do
-      let(:dot) { Dot.new(".bashrc") }
-      before do
-        dot.stub(:in_dotify?).and_return true # stub identical file check
-      end
+      let(:dot) { LinkedDot.new(".bashrc") }
       it "should return true if all checks work" do
         dot.stub(:linked_to_dotify?).and_return true # stub dotify file exist check
         dot.linked?.should == true
@@ -156,23 +135,23 @@ module Dotify
     end
 
     describe Dot, "#symlink" do
-      let!(:dot) { Dot.new(".symlinked") }
+      let!(:dot) { LinkedDot.new(".symlinked") }
       it "should return the symlink for the file" do
+        File.stub(:symlink?).with(dot.dotfile).and_return true
         File.should_receive(:readlink).with(dot.dotfile).once
         dot.symlink
       end
-      it "should return NoSymlink if error or no symlink" do
-        File.stub(:readlink).with(dot.dotfile).and_raise(StandardError)
+      it "should return false if error or no symlink" do
+        File.stub(:symlink?).with(dot.dotfile).and_return false
         expect { dot.symlink }.not_to raise_error
-        dot.symlink.should == NoSymlink
+        dot.symlink.should == false
       end
     end
 
     describe "inspecting dot" do
       it "should display properly" do
-        Dot.new(".zshrc").inspect.should == "#<Dotify::Dot filename: '.zshrc' linked: false>"
-        bash = Dot.new(".bashrc")
-        bash.stub(:linked?).and_return true
+        UnlinkedDot.new(".zshrc").inspect.should == "#<Dotify::Dot filename: '.zshrc' linked: false>"
+        bash = LinkedDot.new(".bashrc")
         bash.inspect.should == "#<Dotify::Dot filename: '.bashrc' linked: true>"
 
       end

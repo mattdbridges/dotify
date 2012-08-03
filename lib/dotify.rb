@@ -1,15 +1,22 @@
-require 'dotify/version'
-require 'dotify/errors'
-
 require 'fileutils'
 
-module Dotify
+# Everything else
+require 'dotify/config'
+require 'dotify/errors'
+require 'dotify/version'
 
-  autoload :Config,     'dotify/config'
-  autoload :Collection, 'dotify/collection'
-  autoload :Filter,     'dotify/filter'
-  autoload :Dot,        'dotify/dot'
-  autoload :CLI,        'dotify/cli'
+# Objects to manage dotfiles
+require 'dotify/dot'
+require 'dotify/collection'
+
+# CLI
+require 'dotify/cli/utilities'
+require 'dotify/cli/listing'
+require 'dotify/cli/repo'
+require 'dotify/cli'
+
+
+module Dotify
 
   def self.installed?
     Config.installed?
@@ -20,6 +27,6 @@ module Dotify
   end
 
   def self.collection
-    @collection ||= Collection.new
+    @collection ||= Collection.home
   end
 end

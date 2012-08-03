@@ -69,21 +69,22 @@ module Dotify
     end
 
     def to_s
-      self.filename
+      filename
     end
 
     def inspect
-      "#<Dotify::Dot filename: '#{@filename}' linked: #{linked?}>"
+      "#<Dotify::Dot filename: '#{filename}' linked: #{linked?}>"
     end
 
     def linked_to_dotify?
-      self.symlink == dotify
+      symlink == dotify
     end
 
     def symlink
+      if !File.symlink?(dotfile)
+        return false
+      end
       File.readlink dotfile
-    rescue
-      NoSymlink
     end
 
   end
